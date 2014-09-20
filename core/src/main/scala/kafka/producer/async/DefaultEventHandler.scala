@@ -64,6 +64,17 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
     while (remainingRetries > 0 && outstandingProduceRequests.size > 0) {
       //--> Get all topics names
       topicMetadataToRefresh ++= outstandingProduceRequests.map(_.topic)
+      /*outstandingProduceRequests.foreach {
+        keyed =>
+          val topicList = keyed.topic
+          if(topicList.indexOf(',') < 0){
+            topicMetadataToRefresh += topicList
+          }else{
+            topicMetadataToRefresh ++= topicList.split(",")
+          }
+      }
+      error("Topics " + topicMetadataToRefresh.mkString(" : "))*/
+
       if (topicMetadataRefreshInterval >= 0 &&
           SystemTime.milliseconds - lastTopicMetadataRefreshTime > topicMetadataRefreshInterval) {
         //Update topic metadata
@@ -102,9 +113,9 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
         val failedProduceRequests = new ArrayBuffer[KeyedMessage[K,Message]]
         try {
           for ((brokerid, messagesPerBrokerMap) <- partitionedData) {
-            if (logger.isTraceEnabled)
+            //if (logger.isTraceEnabled)
               messagesPerBrokerMap.foreach(partitionAndEvent =>
-                trace("Handling event for Topic: %s, Broker: %d, Partitions: %s".format(partitionAndEvent._1, brokerid, partitionAndEvent._2)))
+                error("Handling event for Topic: %s, Broker: %d, Partitions: %s".format(partitionAndEvent._1, brokerid, partitionAndEvent._2)))
             val messageSetPerBroker = groupMessagesToSet(messagesPerBrokerMap)
 
             val failedTopicPartitions = send(brokerid, messageSetPerBroker)
@@ -192,7 +203,7 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
   private def getPartitionListForTopic(m: KeyedMessage[K,Message]): Seq[PartitionAndLeader] = {
     //--> Get partition info for a topic
     val topicPartitionsList = brokerPartitionInfo.getBrokerPartitionInfo(m.topic, correlationId.getAndIncrement)
-    debug("Broker partitions registered for topic: %s are %s"
+    error("Broker partitions registered for topic: %s are %s"
       .format(m.topic, topicPartitionsList.map(p => p.partitionId).mkString(",")))
     val totalNumPartitions = topicPartitionsList.length
     if(totalNumPartitions == 0)
