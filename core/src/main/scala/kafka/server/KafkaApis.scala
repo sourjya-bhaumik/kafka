@@ -446,7 +446,7 @@ class KafkaApis(val requestChannel: RequestChannel,
        bytesReadable >= fetchRequest.minBytes ||
        fetchRequest.numPartitions <= 0) {
       info("Returning fetch response %s for fetch request with correlation id %d to client %s"
-        .format(dataRead.values.map(_.messages).mkString(","), fetchRequest.correlationId, fetchRequest.clientId))
+        .format(dataRead.values.map(_.error).mkString(","), fetchRequest.correlationId, fetchRequest.clientId))
       val response = new FetchResponse(fetchRequest.correlationId, dataRead)
 
 
