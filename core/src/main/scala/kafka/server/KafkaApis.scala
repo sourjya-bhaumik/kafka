@@ -447,6 +447,10 @@ class KafkaApis(val requestChannel: RequestChannel,
         obj =>
           error("Topic and partition " + obj._1.toString)
           error("Fetch response message " + obj._2.messages.mkString(" : "))
+          obj._2.messages.foreach{
+            inObj =>
+              error("  Payload " + inObj.message.payload.toString)
+          }
       }
       requestChannel.sendResponse(new RequestChannel.Response(request, new FetchResponseSend(response)))
     } else {
