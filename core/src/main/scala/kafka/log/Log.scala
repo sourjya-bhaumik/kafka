@@ -366,7 +366,7 @@ class Log(val dir: File,
    * @return The messages read
    */
   def read(startOffset: Long, maxLength: Int, maxOffset: Option[Long] = None): MessageSet = {
-    trace("Reading %d bytes from offset %d in log %s of length %d bytes".format(maxLength, startOffset, name, size))
+    info("Reading %d bytes from offset %d in log %s of length %d bytes".format(maxLength, startOffset, name, size))
 
     // check if the offset is valid and in range
     val next = nextOffset.get

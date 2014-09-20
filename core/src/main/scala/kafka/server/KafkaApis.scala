@@ -552,7 +552,7 @@ class KafkaApis(val requestChannel: RequestChannel,
       replicaManager.getReplicaOrException(topic, partition)
     else
       replicaManager.getLeaderReplicaIfLocal(topic, partition)
-    trace("Fetching log segment for topic, partition, offset, size = " + (topic, partition, offset, maxSize))
+    info("Fetching log segment for topic, partition, offset, size = " + (topic, partition, offset, maxSize))
     val maxOffsetOpt = 
       if (Request.isReplicaIdFromFollower(fromReplicaId))
         None
