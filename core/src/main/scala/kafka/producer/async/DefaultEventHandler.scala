@@ -53,6 +53,7 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
     serializedData.foreach {
       keyed =>
         val dataSize = keyed.message.payloadSize
+        //-->This is for metrics
         producerTopicStats.getProducerTopicStats(keyed.topic).byteRate.mark(dataSize)
         producerTopicStats.getProducerAllTopicsStats.byteRate.mark(dataSize)
     }
@@ -61,9 +62,11 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
     val correlationIdStart = correlationId.get()
     debug("Handling %d events".format(events.size))
     while (remainingRetries > 0 && outstandingProduceRequests.size > 0) {
+      //--> Get all topics names
       topicMetadataToRefresh ++= outstandingProduceRequests.map(_.topic)
       if (topicMetadataRefreshInterval >= 0 &&
           SystemTime.milliseconds - lastTopicMetadataRefreshTime > topicMetadataRefreshInterval) {
+        //Update topic metadata
         Utils.swallowError(brokerPartitionInfo.updateInfo(topicMetadataToRefresh.toSet, correlationId.getAndIncrement))
         sendPartitionPerTopicCache.clear()
         topicMetadataToRefresh.clear
@@ -92,6 +95,7 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
   }
 
   private def dispatchSerializedData(messages: Seq[KeyedMessage[K,Message]]): Seq[KeyedMessage[K, Message]] = {
+    //--> This funstion is returning data leader-broker wise + topic-partition wise(??) 
     val partitionedDataOpt = partitionAndCollate(messages)
     partitionedDataOpt match {
       case Some(partitionedData) =>
@@ -147,13 +151,15 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
     val ret = new HashMap[Int, collection.mutable.Map[TopicAndPartition, Seq[KeyedMessage[K,Message]]]]
     try {
       for (message <- messages) {
-        val topicPartitionsList = getPartitionListForTopic(message)
+        //--> This needs to be done for each topic of a msg
+        val topicPartitionsList = getPartitionListForTopic(message)	//-->Will need different function for this which just accepts topic
         val partitionIndex = getPartition(message.topic, message.partitionKey, topicPartitionsList)
         val brokerPartition = topicPartitionsList(partitionIndex)
 
         // postpone the failure until the send operation, so that requests for other brokers are handled correctly
         val leaderBrokerId = brokerPartition.leaderBrokerIdOpt.getOrElse(-1)
 
+        //--> Here we will have to decide if for each topic for a msg, if leaderBrokerId is same, then club it as 1 request in dataPerBroker else as different requests
         var dataPerBroker: HashMap[TopicAndPartition, Seq[KeyedMessage[K,Message]]] = null
         ret.get(leaderBrokerId) match {
           case Some(element) =>
@@ -163,6 +169,7 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
             ret.put(leaderBrokerId, dataPerBroker)
         }
 
+        //--> Something here needs to be done
         val topicAndPartition = TopicAndPartition(message.topic, brokerPartition.partitionId)
         var dataPerTopicPartition: ArrayBuffer[KeyedMessage[K,Message]] = null
         dataPerBroker.get(topicAndPartition) match {
@@ -183,6 +190,7 @@ class DefaultEventHandler[K,V](config: ProducerConfig,
   }
 
   private def getPartitionListForTopic(m: KeyedMessage[K,Message]): Seq[PartitionAndLeader] = {
+    //--> Get partition info for a topic
     val topicPartitionsList = brokerPartitionInfo.getBrokerPartitionInfo(m.topic, correlationId.getAndIncrement)
     debug("Broker partitions registered for topic: %s are %s"
       .format(m.topic, topicPartitionsList.map(p => p.partitionId).mkString(",")))
