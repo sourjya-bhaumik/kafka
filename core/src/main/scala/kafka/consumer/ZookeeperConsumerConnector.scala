@@ -189,7 +189,7 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
 
   def consume[K, V](topicCountMap: scala.collection.Map[String,Int], keyDecoder: Decoder[K], valueDecoder: Decoder[V])
       : Map[String,List[KafkaStream[K,V]]] = {
-    debug("entering consume ")
+    error("entering consume ")
     if (topicCountMap == null)
       throw new RuntimeException("topicCountMap is null")
 
@@ -218,7 +218,7 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
   def getTopicRegistry: Pool[String, Pool[Int, PartitionTopicInfo]] = topicRegistry
 
   private def registerConsumerInZK(dirs: ZKGroupDirs, consumerIdString: String, topicCount: TopicCount) {
-    info("begin registering consumer " + consumerIdString + " in ZK")
+    error("begin registering consumer " + consumerIdString + " in ZK")
     val timestamp = SystemTime.milliseconds.toString
     val consumerRegistrationInfo = Json.encode(Map("version" -> 1, "subscription" -> topicCount.getTopicCountMap, "pattern" -> topicCount.pattern,
                                                   "timestamp" -> timestamp))

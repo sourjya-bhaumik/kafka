@@ -15,3 +15,5 @@ project/sbt_project_definition.iml
 rat.out
 *.iml
 TAGS
+build/
+.gradle
