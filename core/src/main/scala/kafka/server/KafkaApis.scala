@@ -443,7 +443,11 @@ class KafkaApis(val requestChannel: RequestChannel,
         .format(dataRead.values.map(_.error).mkString(","), fetchRequest.correlationId, fetchRequest.clientId))
       val response = new FetchResponse(fetchRequest.correlationId, dataRead)
       info("RESPONSE " + response.toString())
-      info("RESPONSE DATA " + response.data.mkString(" : "))
+      response.data.foreach{
+        obj =>
+          error("Topic and partition " + obj._1.toString)
+          error("Fetch response message " + obj._2.messages.mkString(" : "))
+      }
       requestChannel.sendResponse(new RequestChannel.Response(request, new FetchResponseSend(response)))
     } else {
       info("Putting fetch request with correlation id %d from client %s into purgatory".format(fetchRequest.correlationId,
