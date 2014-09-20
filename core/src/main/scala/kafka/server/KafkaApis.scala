@@ -439,12 +439,14 @@ class KafkaApis(val requestChannel: RequestChannel,
     if(fetchRequest.maxWait <= 0 ||
        bytesReadable >= fetchRequest.minBytes ||
        fetchRequest.numPartitions <= 0) {
-      debug("Returning fetch response %s for fetch request with correlation id %d to client %s"
+      info("Returning fetch response %s for fetch request with correlation id %d to client %s"
         .format(dataRead.values.map(_.error).mkString(","), fetchRequest.correlationId, fetchRequest.clientId))
       val response = new FetchResponse(fetchRequest.correlationId, dataRead)
+      info("RESPONSE " + response.toString())
+      info("RESPONSE DATA " + response.data.mkString(" : "))
       requestChannel.sendResponse(new RequestChannel.Response(request, new FetchResponseSend(response)))
     } else {
-      debug("Putting fetch request with correlation id %d from client %s into purgatory".format(fetchRequest.correlationId,
+      info("Putting fetch request with correlation id %d from client %s into purgatory".format(fetchRequest.correlationId,
         fetchRequest.clientId))
       // create a list of (topic, partition) pairs to use as keys for this delayed request
       val delayedFetchKeys = fetchRequest.requestInfo.keys.toSeq.map(new RequestKey(_))
