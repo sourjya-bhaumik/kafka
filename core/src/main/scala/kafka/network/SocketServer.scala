@@ -232,7 +232,7 @@ private[kafka] class Processor(val id: Int,
       processNewResponses()
       val startSelectTime = SystemTime.milliseconds
       val ready = selector.select(300)
-      trace("Processor id " + id + " selection time = " + (SystemTime.milliseconds - startSelectTime) + " ms")
+      info("Processor id " + id + " selection time = " + (SystemTime.milliseconds - startSelectTime) + " ms")
       if(ready > 0) {
         val keys = selector.selectedKeys()
         val iter = keys.iterator()
