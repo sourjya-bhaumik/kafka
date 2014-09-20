@@ -22,13 +22,12 @@ import kafka.api._
 import kafka.message._
 import kafka.network._
 import kafka.log._
-import kafka.utils.ZKGroupTopicDirs
+import kafka.utils._
 import scala.collection._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic._
 import kafka.metrics.KafkaMetricsGroup
 import kafka.common._
-import kafka.utils.{ZkUtils, Pool, SystemTime, Logging}
 import kafka.network.RequestChannel.Response
 import kafka.cluster.Broker
 import kafka.controller.KafkaController
@@ -36,6 +35,13 @@ import kafka.utils.Utils.inLock
 import org.I0Itec.zkclient.ZkClient
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kafka.controller.KafkaController.StateChangeLogger
+import kafka.api.PartitionOffsetsResponse
+import scala.Some
+import kafka.api.ProducerResponseStatus
+import kafka.common.TopicAndPartition
+import kafka.network.RequestChannel.Response
+import kafka.controller.KafkaController.StateChangeLogger
+import kafka.api.PartitionFetchInfo
 
 /**
  * Logic to handle the various Kafka requests
@@ -449,7 +455,7 @@ class KafkaApis(val requestChannel: RequestChannel,
           error("Fetch response message " + obj._2.messages.mkString(" : "))
           obj._2.messages.foreach{
             inObj =>
-              val plBytes = inObj.message.payload.array()
+              val plBytes = Utils.readBytes(inObj.message.payload)
               val plStr = new String(plBytes)
               error("  Payload " + plStr)
           }
