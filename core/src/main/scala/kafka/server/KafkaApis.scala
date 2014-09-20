@@ -455,17 +455,18 @@ class KafkaApis(val requestChannel: RequestChannel,
       response.data.foreach{
         obj =>
           error("Topic and partition " + obj._1.toString)
-          error("Fetch response message " + obj._2.messages.mkString(" : "))
+          //error("Fetch response message " + obj._2.messages.mkString(" : "))
           obj._2.messages.foreach{
             inObj =>
               if(inObj.message.key != null) {
                 val plBytes = Utils.readBytes(inObj.message.payload)
                 val plStr = new String(plBytes)
                 val plFields = plStr.split("\t")
-                val newPl = null
+                var newPl = ""
                 if(plFields.length > 2) {
-                  newPl = plFields[ 0] +"\t" + plFields[ 2]
-                  inObj.message = new Message(newPl.getBytes(), inObj.message.key)
+                  newPl = plFields(0) + "\t" + plFields(2)
+                  val newMessage = new Message(newPl.getBytes(), inObj.message.key.array())
+                  error("  New payload " + new String(Utils.readBytes(newMessage.payload)))
                 }
                 //error("  Payload " + plStr)
               }
