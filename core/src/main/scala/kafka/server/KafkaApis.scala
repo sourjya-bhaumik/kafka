@@ -448,6 +448,9 @@ class KafkaApis(val requestChannel: RequestChannel,
       info("Returning fetch response %s for fetch request with correlation id %d to client %s"
         .format(dataRead.values.map(_.error).mkString(","), fetchRequest.correlationId, fetchRequest.clientId))
       val response = new FetchResponse(fetchRequest.correlationId, dataRead)
+
+
+
       info("RESPONSE " + response.toString())
       response.data.foreach{
         obj =>
@@ -455,11 +458,22 @@ class KafkaApis(val requestChannel: RequestChannel,
           error("Fetch response message " + obj._2.messages.mkString(" : "))
           obj._2.messages.foreach{
             inObj =>
-              val plBytes = Utils.readBytes(inObj.message.payload)
-              val plStr = new String(plBytes)
-              error("  Payload " + plStr)
+              if(inObj.message.key != null) {
+                val plBytes = Utils.readBytes(inObj.message.payload)
+                val plStr = new String(plBytes)
+                val plFields = plStr.split("\t")
+                val newPl = null
+                if(plFields.length > 2) {
+                  newPl = plFields[ 0] +"\t" + plFields[ 2]
+                  inObj.message = new Message(newPl.getBytes(), inObj.message.key)
+                }
+                //error("  Payload " + plStr)
+              }
           }
       }
+
+
+
       requestChannel.sendResponse(new RequestChannel.Response(request, new FetchResponseSend(response)))
     } else {
       info("Putting fetch request with correlation id %d from client %s into purgatory".format(fetchRequest.correlationId,
